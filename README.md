@@ -26,6 +26,13 @@ LLM_mini_lab
   [`Foundation Model/README.md`](Foundation%20Model/README.md) for details).
 - The model is still under-trained: it needs more data/epochs to converge.
 
+## Loss curve
+
+Training and validation loss of the latest run (1 epoch on FineWeb-Edu,
+~5.2M tokens):
+
+![Loss curve](Foundation%20Model/loss_curve.png)
+
 ## Requirements
 
 - Python 3.9+

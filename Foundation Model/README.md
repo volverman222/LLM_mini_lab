@@ -58,6 +58,8 @@ The script saves the trained weights to `gpt2-pretrained.pth`.
   with more data. Next steps: train on more documents, longer context, or
   more epochs.
 
+![Loss curve](loss_curve.png)
+
 ## Notes
 
 - The `.pth` checkpoints are git-ignored (add the training script's output

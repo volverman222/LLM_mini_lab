@@ -1,6 +1,8 @@
 import torch
 import time
 
+import numpy as np
+
 from pretraining import GPT_CONFIG_124M, text_to_token_ids
 
 def generate(model, idx, max_new_tokens, context_size, temperature=0.0,
@@ -51,17 +53,50 @@ def generate(model, idx, max_new_tokens, context_size, temperature=0.0,
     return idx
 
 
-def tokens_per_second(model, tokenizer, prompt, max_new_tokens=100):
-    """Measure inference speed in new tokens generated per second.
+def benchmark(model, tokenizer, prompt, max_new_tokens=100, runs=5):
+    """Benchmark inference speed in new tokens generated per second.
 
-    Generates `max_new_tokens` tokens from `prompt` on CPU and divides the
-    number of new tokens by the elapsed wall-clock time.
+    Runs a short warm-up pass, then times `runs` generations of
+    `max_new_tokens` tokens from `prompt`, reporting each run plus the
+    mean and standard deviation. Returns the list of per-run speeds.
     """
+    speeds = []
+
+    # Warm-up to let caches and lazy initialization settle
     idx = text_to_token_ids(prompt, tokenizer)
-    start = time.perf_counter()
-    ids = generate(model=model, idx=idx, max_new_tokens=max_new_tokens,
-                   context_size=GPT_CONFIG_124M["context_length"],
-                   top_k=50, temperature=1.5)
-    elapsed = time.perf_counter() - start
-    new_tokens = ids.shape[1] - idx.shape[1]
-    return new_tokens / elapsed
+    with torch.no_grad():
+        generate(
+            model=model,
+            idx=idx,
+            max_new_tokens=10,
+            context_size=GPT_CONFIG_124M["context_length"],
+            top_k=50,
+            temperature=1.5
+        )
+
+    for i in range(runs):
+        idx = text_to_token_ids(prompt, tokenizer)
+
+        start = time.perf_counter()
+
+        with torch.no_grad():
+            ids = generate(
+                model=model,
+                idx=idx,
+                max_new_tokens=max_new_tokens,
+                context_size=GPT_CONFIG_124M["context_length"],
+                top_k=50,
+                temperature=1.5
+            )
+
+        elapsed = time.perf_counter() - start
+        new_tokens = ids.shape[1] - idx.shape[1]
+        speed = new_tokens / elapsed
+
+        speeds.append(speed)
+        print(f"Run {i+1}: {speed:.2f} tokens/s")
+
+    print(f"\nMean: {np.mean(speeds):.2f} tokens/s")
+    print(f"Standard deviation: {np.std(speeds):.2f} tokens/s")
+
+    return speeds

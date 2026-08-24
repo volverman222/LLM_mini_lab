@@ -27,11 +27,11 @@ following the book *Build a Large Language Model From Scratch*
 - `attention_mechanisms.py` — multi-head causal attention (Q/K/V),
   `LayerNorm`, `GELU`, `FeedForward`.
 - `helper_functions.py` — token-level generation with temperature scaling
-  and top-k sampling.
+  and top-k sampling, plus an inference-speed `benchmark` utility.
 - `Pre_train_LLM_124M .ipynb` — Colab notebook that trains on
   `codelion/fineweb-edu-1B` (streaming) and saves checkpoints to Drive.
 - `load_model.ipynb` — loads a saved checkpoint, runs a short inference
-  and measures generation speed in tokens per second.
+  and benchmarks generation speed in tokens per second.
 - `Training_data.md` / `loss_curve.png` — logs and plot of a real run.
 
 ## How to run
@@ -58,8 +58,8 @@ The script saves the trained weights to `gpt2-pretrained.pth`.
   still **under-trained**: for a 124M model the loss should go much lower
   with more data. Next steps: train on more documents, longer context, or
   more epochs.
-- Inference speed: **~33 tokens/s** for the 124M model on CPU (measured in
-  `load_model.ipynb` with `tokens_per_second`).
+- Inference speed: **~34.3 tokens/s** (mean of 5 runs, σ = 0.35) for the
+  124M model on CPU, measured in `load_model.ipynb` with `benchmark`.
 
 ![Loss curve](loss_curve.png)
 

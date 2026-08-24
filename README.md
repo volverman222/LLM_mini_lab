@@ -11,9 +11,9 @@ LLM_mini_lab
 │   ├── pretraining.py               # datasets, training loop, CLI
 │   ├── Transformer_arquitectures.py # GPT model architecture
 │   ├── attention_mechanisms.py      # multi-head causal attention, LayerNorm, GELU
-│   ├── helper_functions.py          # generation with temperature / top-k
+│   ├── helper_functions.py          # generation with temperature / top-k + benchmark
 │   ├── Pre_train_LLM_124M .ipynb    # Colab notebook for FineWeb-Edu training
-│   ├── load_model.ipynb             # load a checkpoint, run inference, measure tokens/s
+│   ├── load_model.ipynb             # load a checkpoint, run inference, benchmark tokens/s
 │   ├── Training_data.md             # logged losses from a real run
 │   ├── loss_curve.png               # training/validation loss curve
 │   └── README.md                    # project details and current state
@@ -37,5 +37,6 @@ Training and validation loss of the latest run (1 epoch on FineWeb-Edu,
 
 - Python 3.9+
 - PyTorch
+- `numpy`
 - `tiktoken`
 - `datasets` (only for the FineWeb-Edu dataset)

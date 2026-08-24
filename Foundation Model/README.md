@@ -30,7 +30,8 @@ following the book *Build a Large Language Model From Scratch*
   and top-k sampling.
 - `Pre_train_LLM_124M .ipynb` — Colab notebook that trains on
   `codelion/fineweb-edu-1B` (streaming) and saves checkpoints to Drive.
-- `load_model.ipynb` — loads a saved checkpoint and runs a short inference.
+- `load_model.ipynb` — loads a saved checkpoint, runs a short inference
+  and measures generation speed in tokens per second.
 - `Training_data.md` / `loss_curve.png` — logs and plot of a real run.
 
 ## How to run
@@ -57,6 +58,8 @@ The script saves the trained weights to `gpt2-pretrained.pth`.
   still **under-trained**: for a 124M model the loss should go much lower
   with more data. Next steps: train on more documents, longer context, or
   more epochs.
+- Inference speed: **~33 tokens/s** for the 124M model on CPU (measured in
+  `load_model.ipynb` with `tokens_per_second`).
 
 ![Loss curve](loss_curve.png)
 

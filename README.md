@@ -13,7 +13,7 @@ LLM_mini_lab
 │   ├── attention_mechanisms.py      # multi-head causal attention, LayerNorm, GELU
 │   ├── helper_functions.py          # generation with temperature / top-k
 │   ├── Pre_train_LLM_124M .ipynb    # Colab notebook for FineWeb-Edu training
-│   ├── load_model.ipynb             # load a checkpoint and run inference
+│   ├── load_model.ipynb             # load a checkpoint, run inference, measure tokens/s
 │   ├── Training_data.md             # logged losses from a real run
 │   ├── loss_curve.png               # training/validation loss curve
 │   └── README.md                    # project details and current state

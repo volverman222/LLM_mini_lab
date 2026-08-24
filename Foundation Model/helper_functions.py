@@ -1,9 +1,11 @@
 import torch
+import time
 
+from pretraining import GPT_CONFIG_124M, text_to_token_ids
 
 def generate(model, idx, max_new_tokens, context_size, temperature=0.0,
              top_k=None, eos_id=None):
-    """Genera texto token a token con temperature scaling y top-k sampling."""
+    """Generate text token by token with temperature scaling and top-k sampling."""
     for _ in range(max_new_tokens):
         idx_cond = idx[:, -context_size:]
         with torch.no_grad():
@@ -47,3 +49,19 @@ def generate(model, idx, max_new_tokens, context_size, temperature=0.0,
         idx = torch.cat((idx, idx_next), dim=1)  # (batch_size, num_tokens+1)
 
     return idx
+
+
+def tokens_per_second(model, tokenizer, prompt, max_new_tokens=100):
+    """Measure inference speed in new tokens generated per second.
+
+    Generates `max_new_tokens` tokens from `prompt` on CPU and divides the
+    number of new tokens by the elapsed wall-clock time.
+    """
+    idx = text_to_token_ids(prompt, tokenizer)
+    start = time.perf_counter()
+    ids = generate(model=model, idx=idx, max_new_tokens=max_new_tokens,
+                   context_size=GPT_CONFIG_124M["context_length"],
+                   top_k=50, temperature=1.5)
+    elapsed = time.perf_counter() - start
+    new_tokens = ids.shape[1] - idx.shape[1]
+    return new_tokens / elapsed

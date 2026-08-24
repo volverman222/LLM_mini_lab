@@ -1,22 +1,22 @@
 """
-Pretraining de GPT (sección 5.4 del libro "Build a Large Language Model
-From Scratch"): entrena GPT-2 small (124M) desde cero.
+GPT pretraining (section 5.4 of the book "Build a Large Language Model
+From Scratch"): trains GPT-2 small (124M) from scratch.
 
-Dos datasets disponibles:
-  - "verdict":  "The Verdict" de Edith Wharton (texto corto, sin dependencias)
-  - "fineweb":  codelion/fineweb-edu-1B de HuggingFace (~970k documentos,
-                ~1B tokens, en streaming). Requiere: pip install datasets
+Two datasets available:
+  - "verdict":  "The Verdict" by Edith Wharton (short text, no dependencies)
+  - "fineweb":  codelion/fineweb-edu-1B from HuggingFace (~970k documents,
+                ~1B tokens, streaming). Requires: pip install datasets
 
-Solo lo necesario: dataset + dataloader, función de pérdida, bucle de
-entrenamiento y generación de muestra. No requiere TensorFlow.
+Only the essentials: dataset + dataloader, loss function, training loop,
+and sample generation. No TensorFlow required.
 
-Uso desde terminal:
-    python pretraining.py                                  # 10 épocas con The Verdict
-    python pretraining.py --dataset fineweb                # FineWeb-Edu en streaming
+Usage from terminal:
+    python pretraining.py                                  # 10 epochs with The Verdict
+    python pretraining.py --dataset fineweb                # FineWeb-Edu in streaming
     python pretraining.py --dataset fineweb --max_docs 2000 --epochs 1
-    python pretraining.py --epochs 5 --device cpu          # forzar CPU
+    python pretraining.py --epochs 5 --device cpu          # force CPU
 
-Uso desde notebook: importar las funciones (ver celdas en la respuesta).
+Usage from notebook: import the functions (see cells in the answer).
 """
 
 import urllib.request
@@ -30,20 +30,20 @@ import tiktoken
 from Transformer_arquitectures import GPTModel
 
 # ---------------------------------------------------------------------------
-# Configuración del modelo (igual que en el capítulo 5, sección 5.4)
+# Model configuration (same as in chapter 5, section 5.4)
 # ---------------------------------------------------------------------------
 GPT_CONFIG_124M = {
-    "vocab_size": 50257,      # vocabulario de GPT-2
-    "context_length": 256,    # ventana de contexto del capítulo 5
-    "emb_dim": 768,           # dimensión de embedding
-    "n_heads": 12,            # cabezas de atención
-    "n_layers": 12,           # bloques transformer
-    "drop_rate": 0.0,         # sin dropout durante el pretraining
-    "qkv_bias": False         # sin bias en Q/K/V (config del libro)
+    "vocab_size": 50257,      # GPT-2 vocabulary
+    "context_length": 256,    # context window from chapter 5
+    "emb_dim": 768,           # embedding dimension
+    "n_heads": 12,            # attention heads
+    "n_layers": 12,           # transformer blocks
+    "drop_rate": 0.0,         # no dropout during pretraining
+    "qkv_bias": False         # no bias in Q/K/V (book config)
 }
 
 # ---------------------------------------------------------------------------
-# Dataset y DataLoader (capítulo 2)
+# Dataset and DataLoader (chapter 2)
 # ---------------------------------------------------------------------------
 class GPTDatasetV1(Dataset):
     def __init__(self, txt, tokenizer, max_length, stride):
@@ -89,7 +89,7 @@ def create_dataloader_v1(txt, batch_size=4, max_length=256,
 
 
 # ---------------------------------------------------------------------------
-# Helpers de texto
+# Text helpers
 # ---------------------------------------------------------------------------
 def text_to_token_ids(text, tokenizer):
     encoded = tokenizer.encode(text, allowed_special={"<|endoftext|>"})
@@ -103,7 +103,7 @@ def token_ids_to_text(token_ids, tokenizer):
 
 
 def generate_text_simple(model, idx, max_new_tokens, context_size):
-    # Generación greedy (argmax) usada para mostrar muestras durante el training
+    # Greedy (argmax) generation used to show samples during training
     for _ in range(max_new_tokens):
         idx_cond = idx[:, -context_size:]
         with torch.no_grad():
@@ -115,7 +115,7 @@ def generate_text_simple(model, idx, max_new_tokens, context_size):
 
 
 # ---------------------------------------------------------------------------
-# Pérdida, evaluación y entrenamiento (sección 5.4)
+# Loss, evaluation and training (section 5.4)
 # ---------------------------------------------------------------------------
 def calc_loss_batch(input_batch, target_batch, model, device):
     input_batch = input_batch.to(device)
@@ -133,14 +133,14 @@ def calc_loss_loader(data_loader, model, device, num_batches=None):
     try:
         n_total = len(data_loader)
     except TypeError:
-        n_total = None  # dataloader streaming (IterableDataset): no tiene len()
+        n_total = None  # streaming dataloader (IterableDataset): no len()
 
     if n_total == 0:
         return float("nan")
     if num_batches is None:
         if n_total is None:
             raise ValueError(
-                "num_batches es obligatorio para dataloaders streaming")
+                "num_batches is required for streaming dataloaders")
         num_batches = n_total
     elif n_total is not None:
         num_batches = min(num_batches, n_total)
@@ -179,8 +179,8 @@ def generate_and_print_sample(model, tokenizer, device, start_context):
 def train_model_simple(model, train_loader, val_loader, optimizer, device,
                        num_epochs, eval_freq, eval_iter, start_context, tokenizer,
                        eval_train_loader=None, eval_val_loader=None):
-    """Bucle de entrenamiento. Por defecto evalúa sobre train_loader/val_loader;
-    con datasets streaming pasa loaders fijos en eval_train_loader/eval_val_loader."""
+    """Training loop. By default it evaluates on train_loader/val_loader;
+    with streaming datasets pass fixed loaders in eval_train_loader/eval_val_loader."""
     train_losses, val_losses, track_tokens_seen = [], [], []
     tokens_seen, global_step = 0, -1
 
@@ -213,7 +213,7 @@ def train_model_simple(model, train_loader, val_loader, optimizer, device,
 
 
 # ---------------------------------------------------------------------------
-# Dataset de entrenamiento
+# Training dataset
 # ---------------------------------------------------------------------------
 VERDICT_URL = ("https://raw.githubusercontent.com/rasbt/"
                "LLMs-from-scratch/main/ch05/"
@@ -221,28 +221,28 @@ VERDICT_URL = ("https://raw.githubusercontent.com/rasbt/"
 
 
 def download_verdict(file_path="the-verdict.txt"):
-    """Descarga 'The Verdict' (o usa la copia local si ya existe) y la devuelve."""
+    """Downloads 'The Verdict' (or uses the local copy if it exists) and returns it."""
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
-        print(f"Descargando {file_path} ...")
+        print(f"Downloading {file_path} ...")
         urllib.request.urlretrieve(VERDICT_URL, file_path)
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read()
 
 
 # ---------------------------------------------------------------------------
-# FineWeb-Edu (codelion/fineweb-edu-1B): dataset grande de HuggingFace, en
-# streaming (no se descarga entero). Mismo patrón que el dataloader del libro
-# (ch05/10_llm-training-speed): ventanas sin solapamiento + token <|endoftext|>
-# entre documentos. Requiere: pip install datasets
+# FineWeb-Edu (codelion/fineweb-edu-1B): large HuggingFace dataset, streamed
+# (not downloaded entirely). Same pattern as the book's dataloader
+# (ch05/10_llm-training-speed): non-overlapping windows + <|endoftext|> token
+# between documents. Requires: pip install datasets
 # ---------------------------------------------------------------------------
 class TokenBlockIterableDataset(IterableDataset):
-    """Streaming: tokeniza documentos de FineWeb-Edu y genera ventanas de
-    max_length tokens. Cada documento termina con <|endoftext|>. Los
-    documentos se reparten en train/val según val_mod (cada val_mod-ésimo
-    documento va a validación)."""
+    """Streaming: tokenizes FineWeb-Edu documents and yields max_length-token
+    windows. Each document ends with <|endoftext|>. Documents are split into
+    train/val according to val_mod (every val_mod-th document goes to
+    validation)."""
 
     def __init__(self, stream, encoder, max_length=1024, add_eot=True,
                  val_mod=100, val_split=False, max_docs=None):
@@ -291,7 +291,7 @@ class TokenBlockIterableDataset(IterableDataset):
 
 
 class FixedPairsDataset(Dataset):
-    """Dataset en memoria (con len()) con pares (x, y) ya tokenizados."""
+    """In-memory dataset (with len()) holding already tokenized (x, y) pairs."""
 
     def __init__(self, pairs):
         self.pairs = pairs
@@ -304,7 +304,7 @@ class FixedPairsDataset(Dataset):
 
 
 def materialize_from_loader(loader, max_batches=32):
-    """Congela los primeros max_batches de un loader streaming en un Dataset."""
+    """Freezes the first max_batches of a streaming loader into a Dataset."""
     pairs = []
     for i, (x, y) in enumerate(loader):
         pairs.extend(list(zip(x, y)))
@@ -315,7 +315,7 @@ def materialize_from_loader(loader, max_batches=32):
 
 def make_fixed_eval_loaders(train_loader, val_loader,
                             max_train_batches=8, max_val_batches=16):
-    """Loaders fijos (con len()) para evaluar sin perturbar el stream."""
+    """Fixed loaders (with len()) for evaluating without disturbing the stream."""
     train_bs = getattr(train_loader, "batch_size", 1) or 1
     val_bs = getattr(val_loader, "batch_size", 1) or 1
 
@@ -334,18 +334,18 @@ def make_fixed_eval_loaders(train_loader, val_loader,
 def create_dataloader_fineweb(batch_size=2, max_length=1024, val_mod=100,
                               seed=123, max_docs=None, num_workers=0,
                               add_eot=True, shuffle_buffer=10000):
-    """Loaders streaming de codelion/fineweb-edu-1B (~970k docs, ~1B tokens).
+    """Streaming loaders of codelion/fineweb-edu-1B (~970k docs, ~1B tokens).
 
-    Devuelve (train_loader, val_loader). Para evaluar durante el training usa
+    Returns (train_loader, val_loader). To evaluate during training use
     make_fixed_eval_loaders(train_loader, val_loader).
-    max_docs limita cuántos documentos consume el train (None = todo el
-    dataset, ~1B tokens). Cada documento ≈ 1-2k tokens.
+    max_docs limits how many documents train consumes (None = the whole
+    dataset, ~1B tokens). Each document ≈ 1-2k tokens.
     """
     try:
         from datasets import load_dataset
     except ImportError as e:
         raise ImportError(
-            "Para usar FineWeb-Edu necesitas instalar 'datasets': "
+            "To use FineWeb-Edu you need to install 'datasets': "
             "pip install datasets") from e
 
     stream = load_dataset("codelion/fineweb-edu-1B",
@@ -381,7 +381,7 @@ def pick_device():
 
 
 # ---------------------------------------------------------------------------
-# Punto de entrada (también usable como script de terminal)
+# Entry point (also usable as a terminal script)
 # ---------------------------------------------------------------------------
 def main(epochs=None, batch_size=2, max_length=None, eval_freq=None, eval_iter=1,
          start_context="Every effort moves you", device=None, seed=123,
@@ -403,7 +403,7 @@ def main(epochs=None, batch_size=2, max_length=None, eval_freq=None, eval_iter=1
 
         cfg = {**GPT_CONFIG_124M, "context_length": max_length}
         print(f"Dataset: codelion/fineweb-edu-1B (streaming, "
-              f"max_docs={max_docs}, 1 doc de val cada {val_mod})")
+              f"max_docs={max_docs}, 1 val doc every {val_mod})")
     else:
         max_length = max_length or 256
         epochs = epochs or 10
@@ -440,37 +440,37 @@ def main(epochs=None, batch_size=2, max_length=None, eval_freq=None, eval_iter=1
         start_context=start_context, tokenizer=tokenizer,
         eval_train_loader=train_eval_loader, eval_val_loader=val_eval_loader)
 
-    print(f"\nLoss final de entrenamiento: {train_losses[-1]:.3f}")
-    print(f"Loss final de validación:    {val_losses[-1]:.3f}")
+    print(f"\nFinal training loss: {train_losses[-1]:.3f}")
+    print(f"Final validation loss:    {val_losses[-1]:.3f}")
 
     torch.save(model.state_dict(), "gpt2-pretrained.pth")
-    print("Modelo guardado en gpt2-pretrained.pth")
+    print("Model saved to gpt2-pretrained.pth")
 
 
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Pretraining de GPT-2 small (124M)")
+    parser = argparse.ArgumentParser(description="GPT-2 small (124M) pretraining")
     parser.add_argument("--dataset", type=str, default="verdict",
                         choices=["verdict", "fineweb"],
-                        help="verdict (The Verdict) o fineweb (FineWeb-Edu)")
+                        help="verdict (The Verdict) or fineweb (FineWeb-Edu)")
     parser.add_argument("--epochs", type=int, default=None,
-                        help="por defecto: 10 (verdict) o 1 (fineweb)")
+                        help="default: 10 (verdict) or 1 (fineweb)")
     parser.add_argument("--batch_size", type=int, default=2)
     parser.add_argument("--max_length", type=int, default=None,
-                        help="por defecto: 256 (verdict) o 1024 (fineweb)")
+                        help="default: 256 (verdict) or 1024 (fineweb)")
     parser.add_argument("--eval_freq", type=int, default=None,
-                        help="por defecto: 5 (verdict) o 100 (fineweb)")
+                        help="default: 5 (verdict) or 100 (fineweb)")
     parser.add_argument("--eval_iter", type=int, default=1)
     parser.add_argument("--start_context", type=str, default="Every effort moves you")
     parser.add_argument("--device", type=str, default=None,
-                        help="cpu, mps o cuda (por defecto: auto)")
+                        help="cpu, mps or cuda (default: auto)")
     parser.add_argument("--seed", type=int, default=123)
     parser.add_argument("--max_docs", type=int, default=5000,
-                        help="fineweb: máx. documentos de entrenamiento "
-                             "(None = todo el dataset)")
+                        help="fineweb: max. training documents "
+                             "(None = the whole dataset)")
     parser.add_argument("--val_mod", type=int, default=100,
-                        help="fineweb: 1 documento de validación cada N")
+                        help="fineweb: 1 validation document every N")
     args = parser.parse_args()
 
     main(epochs=args.epochs, batch_size=args.batch_size,

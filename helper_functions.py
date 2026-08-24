@@ -47,7 +47,3 @@ def generate(model, idx, max_new_tokens, context_size, temperature=0.0,
         idx = torch.cat((idx, idx_next), dim=1)  # (batch_size, num_tokens+1)
 
     return idx
-def text_to_token_ids(text, tokenizer):
-    encoded = tokenizer.encode(text, allowed_special={"<|endoftext|>"})
-    encoded_tensor = torch.tensor(encoded).unsqueeze(0)  # shape: (1, n_tokens)
-    return encoded_tensor

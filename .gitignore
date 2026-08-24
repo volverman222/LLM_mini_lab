@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# macOS
+.DS_Store
+
+# Datos descargados y modelos entrenados
+the-verdict.txt
+*.pth
+*.pt
+
+# Cuadernos temporales de Colab
+*.ipynb_checkpoints/

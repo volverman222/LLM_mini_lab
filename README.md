@@ -17,7 +17,12 @@ LLM_mini_lab
 │   ├── Training_data.md             # logged losses from a real run
 │   ├── loss_curve.png               # training/validation loss curve
 │   └── README.md                    # project details and current state
-└── kv_cache/            # (empty) reserved for future KV-cache work
+└── Optimization Techniques/
+    ├── attention_mechanisms.py      # shared MHA, GQA and KV-cache attention
+    ├── Transformer_arquitectures.py # shared GPT and GQA-GPT architectures
+    ├── help_functions.py            # shared generation helpers
+    ├── gqa/                         # GQA experiments and visualization
+    └── kv_cache/                    # KV-cache and GQA-cache notebooks
 ```
 
 ## Status

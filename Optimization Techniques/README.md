@@ -41,6 +41,14 @@ KV-cache bytes = 2 × L × B × T × H_kv × d_h × s
 
 The leading `2` represents the key and value tensors.
 
+### Benchmark result
+
+In the included benchmark, cached generation took 2.19 seconds versus 9.43
+seconds without a cache: 76.7% less time, or a 4.30× throughput improvement
+(91.15 versus 21.21 tokens per second).
+
+![KV-cache generation benchmark](kv_cache/kv_cache_benchmark.png)
+
 Use `generate_text_simple_cached` from `help_functions.py` with a model that
 supports `use_cache=True`. The helper resets the cache before processing a new
 prompt.

@@ -1,0 +1,7 @@
+{
+    "model_name": "gpt2-fineweb-124m-step-120000.pt",
+    "Benchmark": "HellaSwag",
+    "examples": 100,
+    "acc": 0.37,
+    "acc_norm": 0.37
+}

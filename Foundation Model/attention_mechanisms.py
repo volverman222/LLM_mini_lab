@@ -37,10 +37,13 @@ class LayerNorm(nn.Module):
         self.shift = nn.Parameter(torch.zeros(emb_dim))
 
     def forward(self, x):
-        mean = x.mean(dim=-1, keepdim=True)
-        var = x.var(dim=-1, keepdim=True, unbiased=False)
-        norm_x = (x - mean) / torch.sqrt(var + self.eps)
-        return self.scale * norm_x + self.shift
+        # Keep the reduction in FP32 when the surrounding model uses AMP/FP16.
+        # This prevents variance overflow in the custom LayerNorm implementation.
+        x_float = x.float()
+        mean = x_float.mean(dim=-1, keepdim=True)
+        var = x_float.var(dim=-1, keepdim=True, unbiased=False)
+        norm_x = (x_float - mean) / torch.sqrt(var + self.eps)
+        return (self.scale.float() * norm_x + self.shift.float()).to(dtype=x.dtype)
 
 
 class CausalSelfAttention(nn.Module):
@@ -117,16 +120,18 @@ class MultiHeadAttention(nn.Module):
         queries = queries.transpose(1, 2)
         values = values.transpose(1, 2)
 
-        attn_scores = queries @ keys.transpose(2, 3)
+        # QK^T and softmax are the numerically sensitive operations in FP16.
+        # Compute them in FP32, then return to the AMP dtype for the output layer.
+        with torch.autocast(device_type=x.device.type, enabled=False):
+            attn_scores = queries.float() @ keys.float().transpose(2, 3)
+            mask_bool = self.mask.bool()[:num_tokens, :num_tokens]
+            attn_scores.masked_fill_(mask_bool, -torch.inf)
+            attn_weights = torch.softmax(
+                attn_scores / keys.shape[-1] ** 0.5, dim=-1)
+            attn_weights = self.dropout(attn_weights)
+            context_vec = attn_weights @ values.float()
 
-        mask_bool = self.mask.bool()[:num_tokens, :num_tokens]
-
-        attn_scores.masked_fill_(mask_bool, -torch.inf)
-
-        attn_weights = torch.softmax(attn_scores / keys.shape[-1] ** 0.5, dim=-1)
-        attn_weights = self.dropout(attn_weights)
-
-        context_vec = (attn_weights @ values).transpose(1, 2)
+        context_vec = context_vec.to(dtype=x.dtype).transpose(1, 2)
         context_vec = context_vec.contiguous().view(b, num_tokens, self.d_out)
         context_vec = self.out_proj(context_vec)
 

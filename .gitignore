@@ -1,3 +1,7 @@
 .DS_Store
 __pycache__/
 *.py[cod]
+.venv*/
+Model Checkpoints/
+gpt2-OpenAI-checkpoint/
+benchmarks_results/

@@ -49,6 +49,37 @@ python pretraining.py --epochs 5 --device cpu
 
 The script saves the trained weights to `gpt2-pretrained.pth`.
 
+## Export to Hugging Face and evaluate with lm-eval-harness
+
+Install the conversion/evaluation dependencies:
+
+```bash
+pip install torch transformers tokenizers tiktoken lm-eval
+```
+
+Convert the PyTorch checkpoint (run from the repository root):
+
+```bash
+python "Foundation Model/convert_to_huggingface.py" \
+  --checkpoint "gpt2-pretrained.pth" \
+  --output_dir "hf-gpt2-124m"
+```
+
+The converter uses the GPT-2 tokenizer, writes a standard
+`GPT2LMHeadModel`, and reports a smoke-test difference between both models.
+Then run a harness task, for example:
+
+```bash
+lm_eval --model hf \
+  --model_args pretrained=hf-gpt2-124m,tokenizer=hf-gpt2-124m \
+  --tasks hellaswag --device cpu --batch_size 1
+```
+
+For a local model, `pretrained` and `tokenizer` should both point to the
+exported directory. Since this model was trained with the GPT-2 tokenizer,
+use causal-language-model tasks and keep in mind that its training is still
+under-trained, so benchmark scores will be exploratory.
+
 ## Current state
 
 - Trained **1 epoch on FineWeb-Edu** (streaming), ~5.2M tokens seen

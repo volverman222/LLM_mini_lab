@@ -1,0 +1,7 @@
+{
+    "model_name": "gpt2-fineweb-124m-step-120000.pt",
+    "Benchmark": "Arc_Easy",
+    "examples": 100,
+    "acc": 0.34,
+    "acc_norm": 0.27
+}

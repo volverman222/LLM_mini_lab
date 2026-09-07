@@ -1,0 +1,7 @@
+{
+    "model_name": "model.pth",
+    "Benchmark": "HellaSwag",
+    "examples": 100,
+    "acc": 0.26,
+    "acc_norm": 0.29
+}
